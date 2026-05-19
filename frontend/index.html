@@ -107,7 +107,9 @@
                     throw new Error(dados.erro || 'Moiou o pó');
                 }
 
-                respostaDiv.innerHTML = `✅ ${dados.mensagem}`;
+                console.log('Dados recebidos:', dados);
+
+                respostaDiv.innerHTML = `✅ ${dados.mensagem}<br>⏱️ Tempo de preparo: ${dados.tempo}`;
             } catch (erro) {
                 respostaDiv.innerHTML = `<span class="erro">⚠️ Erro: ${erro.message}</span>`;
                 console.error('Erro na requisição:', erro);
