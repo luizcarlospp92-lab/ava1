@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café pra startar o dia</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #resposta {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .erro {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>&#9749 Aceita um cafézin ... &#9749</h2>
+        <p>Digite para quem é o café, abaixo:</p>
+        <input type="text" id="nomeInput" placeholder="Ex: João da Silva" autocomplete="off">
+        <br>
+        <button id="enviarBtn">Enviar</button>
+        <div id="resposta"></div>
+    </div>
+
+    <style>
+
+        body {
+        background-image: url('imagens/fundo.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed; /* opcional: fundo fixo ao rolar */
+    }
+
+    </style>
+
+    <script>
+        const enviarBtn = document.getElementById('enviarBtn');
+        const nomeInput = document.getElementById('nomeInput');
+        const respostaDiv = document.getElementById('resposta');
+
+        async function enviarSaudacao() {
+            const nome = nomeInput.value.trim();
+
+            if (!nome) {
+                respostaDiv.innerHTML = '<span class="erro">❌ Por favor, dê café pra alguém.</span>';
+                return;
+            }
+
+            // Exibe "carregando" enquanto aguarda a resposta do servidor
+            respostaDiv.innerHTML = '⏳ Passando cafézin...';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/saudacao', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nome: nome })
+                });
+
+                const dados = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(dados.erro || 'Moiou o pó');
+                }
+
+                respostaDiv.innerHTML = `✅ ${dados.mensagem}`;
+            } catch (erro) {
+                respostaDiv.innerHTML = `<span class="erro">⚠️ Erro: ${erro.message}</span>`;
+                console.error('Erro na requisição:', erro);
+            }
+        }
+
+        // Envia ao clicar no botão
+        enviarBtn.addEventListener('click', enviarSaudacao);
+
+        // Permite enviar pressionando "Enter" no campo de texto
+        nomeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                enviarSaudacao();
+            }
+        });
+    </script>
+</body>
+</html>
