@@ -7,7 +7,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Habilita CORS para permitir requisições do front-end (caso estejam em origens diferentes)
+// Habilita CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST');
@@ -24,8 +24,13 @@ app.post('/api/saudacao', (req, res) => {
     }
 
     const saudacao = `Salve, ${nome}! Senta ai, e tome um cafézin.`;
-    res.json({ mensagem: saudacao });
-});
+    const tempoPreparo = Math.floor(Math.random() * 3) + 1; // 1 a 3 minutos
+
+    res.json({ 
+        mensagem: saudacao,
+        tempo: `${tempoPreparo} minuto(s)`
+    });
+}); // ← agora sim, fechou corretamente o app.post
 
 // Inicia o servidor
 app.listen(PORT, () => {
