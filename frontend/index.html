@@ -40,6 +40,12 @@
         button:hover {
             background-color: #218838;
         }
+        button.secundario {
+            background-color: #6c757d;
+        }
+        button.secundario:hover {
+            background-color: #5a6268;
+        }
         #resposta {
             margin-top: 20px;
             font-size: 18px;
@@ -52,6 +58,26 @@
         .erro {
             color: #dc3545;
         }
+
+        /* Contador de cafés */
+        #contador {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        #contador h3 {
+            margin: 0 0 15px;
+            color: #333;
+        }
+        #coffeeCount {
+            font-size: 32px;
+            color: #28a745;
+        }
+        #coffeeErro {
+            margin-top: 10px;
+            min-height: 1.2em;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -62,6 +88,14 @@
         <br>
         <button id="enviarBtn">Enviar</button>
         <div id="resposta"></div>
+
+        <!-- Contador de cafés -->
+        <div id="contador">
+            <h3>&#9749; Cafés servidos: <span id="coffeeCount">0</span></h3>
+            <button id="coffeeAdd" type="button">&#9749; +1 café</button>
+            <button id="coffeeReset" type="button" class="secundario">Zerar</button>
+            <div id="coffeeErro" class="erro"></div>
+        </div>
     </div>
 
     <style>
@@ -77,23 +111,59 @@
     </style>
 
     <script>
+        const API_URL = 'http://localhost:3000';
+
         const enviarBtn = document.getElementById('enviarBtn');
         const nomeInput = document.getElementById('nomeInput');
         const respostaDiv = document.getElementById('resposta');
+
+        const coffeeCount = document.getElementById('coffeeCount');
+        const coffeeErro = document.getElementById('coffeeErro');
+
+        // Mostra texto na área de resposta SEM interpretar HTML (evita XSS).
+        // Cada item de "linhas" vira uma linha; "classe" é opcional (ex.: 'erro').
+        function mostrarResposta(linhas, classe) {
+            respostaDiv.replaceChildren();
+            linhas.forEach((linha, i) => {
+                if (i > 0) respostaDiv.appendChild(document.createElement('br'));
+                const trecho = document.createElement('span');
+                if (classe) trecho.className = classe;
+                trecho.textContent = linha;
+                respostaDiv.appendChild(trecho);
+            });
+        }
+
+        // Chama a API do contador (GET = ler, POST = +1, DELETE = zerar)
+        async function atualizarContador(metodo) {
+            try {
+                const response = await fetch(`${API_URL}/api/coffee`, { method: metodo });
+                const dados = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(dados.error || 'Erro no contador');
+                }
+
+                coffeeCount.textContent = dados.count;
+                coffeeErro.textContent = '';
+            } catch (erro) {
+                coffeeErro.textContent = '⚠️ Contador indisponível. O servidor está rodando?';
+                console.error('Erro no contador:', erro);
+            }
+        }
 
         async function enviarSaudacao() {
             const nome = nomeInput.value.trim();
 
             if (!nome) {
-                respostaDiv.innerHTML = '<span class="erro">❌ Por favor, dê café pra alguém.</span>';
+                mostrarResposta(['❌ Por favor, dê café pra alguém.'], 'erro');
                 return;
             }
 
             // Exibe "carregando" enquanto aguarda a resposta do servidor
-            respostaDiv.innerHTML = '⏳ Passando cafézin...';
+            mostrarResposta(['⏳ Passando cafézin...']);
 
             try {
-                const response = await fetch('http://localhost:3000/api/saudacao', {
+                const response = await fetch(`${API_URL}/api/saudacao`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -109,9 +179,12 @@
 
                 console.log('Dados recebidos:', dados);
 
-                respostaDiv.innerHTML = `✅ ${dados.mensagem}<br>⏱️ Tempo de preparo: ${dados.tempo}`;
+                mostrarResposta([`✅ ${dados.mensagem}`, `⏱️ Tempo de preparo: ${dados.tempo}`]);
+
+                // Café servido com sucesso: soma 1 no contador
+                atualizarContador('POST');
             } catch (erro) {
-                respostaDiv.innerHTML = `<span class="erro">⚠️ Erro: ${erro.message}</span>`;
+                mostrarResposta([`⚠️ Erro: ${erro.message}`], 'erro');
                 console.error('Erro na requisição:', erro);
             }
         }
@@ -125,6 +198,13 @@
                 enviarSaudacao();
             }
         });
+
+        // Botões do contador
+        document.getElementById('coffeeAdd').addEventListener('click', () => atualizarContador('POST'));
+        document.getElementById('coffeeReset').addEventListener('click', () => atualizarContador('DELETE'));
+
+        // Mostra o valor atual ao abrir a página
+        atualizarContador('GET');
     </script>
 </body>
 </html>
