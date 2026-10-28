@@ -1,5 +1,6 @@
 // backend/server.js
 const express = require('express');
+const { createCoffeeRouter } = require('./src/coffee/coffeeRouter'); // contador de cafés
 const app = express();
 const PORT = 3000;
 
@@ -7,13 +8,16 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Habilita CORS
+// Habilita CORS (precisa vir ANTES das rotas)
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
 });
+
+// Contador de cafés: GET, POST e DELETE em /api/coffee
+app.use('/api/coffee', createCoffeeRouter());
 
 // Rota de saudação (POST)
 app.post('/api/saudacao', (req, res) => {
@@ -26,11 +30,11 @@ app.post('/api/saudacao', (req, res) => {
     const saudacao = `Salve, ${nome}! Senta ai, e tome um cafézin.`;
     const tempoPreparo = Math.floor(Math.random() * 3) + 1; // 1 a 3 minutos
 
-    res.json({ 
+    res.json({
         mensagem: saudacao,
         tempo: `${tempoPreparo} minuto(s)`
     });
-}); // ← agora sim, fechou corretamente o app.post
+});
 
 // Inicia o servidor
 app.listen(PORT, () => {
